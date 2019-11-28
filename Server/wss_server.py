@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import json
 import logging
+import os
 import pathlib
 import ssl
 import sys
@@ -35,17 +36,18 @@ class User:
         self.password = pw  # TODO: hash first
 
 class UserBook:
-    def __init__(self):
+    def __init__(self, pw):
         self.users = []
         self.updated = True
+        self.password = pw
+        self.chunksize = 64*1024
         self.load()
     
-    def getKey(password):
+    def getKey(self, password):
         hasher = SHA256.new(password.encode('utf-8'))
         return hasher.digest()
-    def encrypt(key, filename):
-        chunksize = 64 * 1024
-        outputFile = '(encrypted)' + filename
+    def encrypt(self, key, filename):
+        outputFile = filename + '.aes'
         filesize = str(os.path.getsize(filename)).zfill(16)
         IV = Random.new().read(16)
         encryptor = AES.new(key, AES.MODE_CBC, IV)
@@ -54,52 +56,64 @@ class UserBook:
                 outfile.write(filesize.encode('utf-8'))
                 outfile.write(IV)
                 while True:
-                    chunk = infile.read(chunksize)
+                    chunk = infile.read(self.chunksize)
                     if len(chunk) == 0:
                         break
                     elif len(chunk)%16 != 0:
                         chunk += b' ' * (16 - (len(chunk) % 16))
                     outfile.write(encryptor.encrypt(chunk))
-    def decrypt(key, filename):
+    def decrypt(self, key, filename):
         chunksize = 64 * 1024
-        outputFile = filename[11:]
+        outputFile = filename[:-4]
         with open(filename, 'rb') as infile:
             filesize = int(infile.read(16))
             IV = infile.read(16)
             decryptor = AES.new(key, AES.MODE_CBC, IV)
             with open(outputFile, 'wb') as outfile:
                 while True:
-                    chunk = infile.read(chunksize)
+                    chunk = infile.read(self.chunksize)
                     if len(chunk) == 0:
                         break
                     outfile.write(decryptor.decrypt(chunk))
                     outfile.truncate(filesize)
     
+    # only called once as server start
     def load(self):
-        pass
-        '''
-        chunksize =64 * 1024
-        outputFile = “(encrypted)” + settings.USER_BOOK_FILE
-        filesize = str(os.path.getsize(filename)).zfill(16)
-        IV = Random.new().read(16)
-        settings.USER_BOOK_FILE + 'aes'
-        with open('my_new_file.aaa','wb') as new_file:
-            new_file.write(decrypted_data)
-        with open('data.txt', 'r') as j_file:
-            json.dump(my_details, json_file)
-        '''
+        if not os.path.isfile('./' + settings.USER_BOOK_FILE + '.aes'):
+            logger.debug('no user book existed')
+            return
+        try:
+            self.decrypt(self.getKey(self.password), settings.USER_BOOK_FILE + '.aes')
+            with open(settings.USER_BOOK_FILE, 'r') as j_file:
+                data = json.load(j_file)
+                for k,v in data.items():
+                    self.users.append(User(k, v))
+        except Exception as e:
+            logger.error(f'load user book error: {e}')
+        finally:
+            logger.debug('user book loaded')
+            self.updated = True
+    
     async def store(self):
         while True:
             if self.updated:
-                await asyncio.sleep(10)
+                await asyncio.sleep(3)
             else:
-                await asyncio.sleep(10)
-                '''
-                with open('data.txt', 'w') as j_file:
-                    json.dump(my_details, j_file)
-                encrypt_me = "my_transcript.pdf"
-                output_file = easy-aes.encrypt_file(encrypt_me)
-                '''
+                d = {}
+                for u in self.users:
+                    d[u.name] = u.password
+                try:
+                    with open(settings.USER_BOOK_FILE, 'w') as j_file:
+                        json.dump(d, j_file)
+                    self.encrypt(self.getKey(self.password), settings.USER_BOOK_FILE)
+                except Exception as e:
+                    logger.error(f'update user book error: {e}')
+                else:
+                    logger.debug('user book updated')
+                finally:
+                    os.remove('./' + settings.USER_BOOK_FILE)
+                    self.updated = True
+    
     def register(self, name, pw):
         if len(self.users) < settings.RESISTERED_USER_MAX_AMOUNT:
             self.users.append(User(name, pw))
@@ -159,8 +173,7 @@ class ChatRoom:
         self.online_users = {}  # map websocket object to User object
         self.msg_buffer = [None for _ in range(settings.MSG_BUFFER_MAX_AMOUNT)]
         self.last_msg = 0
-        self.user_book = UserBook()
-        self.user_book_pw = pw
+        self.user_book = UserBook(pw)
     
     def addMsg(self, user_name, msg):
         if self.last_msg == settings.MSG_BUFFER_MAX_AMOUNT-1:
@@ -442,6 +455,8 @@ if __name__ == "__main__":
     logger.debug(f'python sys.path: {sys.path}')
     
     chat_room = ChatRoom(args.user_book_pw)
+    
+    # TODO: start a watchdog process
     
     # will then block the main thread
     if args.port:
