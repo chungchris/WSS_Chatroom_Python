@@ -49,6 +49,9 @@ async def processCommandFromGUI(cmd_q, ws_q, res_q, loop, user):
                 await handler.sendMsg(cmd[1])
             elif cmd[0] == settings.JSON_VALUE_REQUEST_TYPE_LOGIN:
                 err = await handler.login(cmd[1], cmd[2])
+                if err == None:
+                    user.ui_status_label_text.set(settings.UI_STATUS_MSG_ERROR)
+                    user.ui_status_label_color('red')
                 if err == settings.ERROR_NONE:
                     user.status = settings.USER_STATE_LOGIN
                     user.name = cmd[1]
@@ -62,6 +65,9 @@ async def processCommandFromGUI(cmd_q, ws_q, res_q, loop, user):
                     user.ui_status_label_color('red')
             elif cmd[0] == settings.JSON_VALUE_REQUEST_TYPE_REG:
                 err = await handler.register(cmd[1], cmd[2])
+                if err == None:
+                    user.ui_status_label_text.set(settings.UI_STATUS_MSG_ERROR)
+                    user.ui_status_label_color('red')
                 if err == settings.ERROR_NONE:
                     user.status = settings.USER_STATE_INITIAL
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_REG_DONE)
@@ -77,6 +83,9 @@ async def processCommandFromGUI(cmd_q, ws_q, res_q, loop, user):
                     user.ui_status_label_color('red')
             elif cmd[0] == settings.JSON_VALUE_REQUEST_TYPE_UNREG:
                 err = await handler.unregister(cmd[1])
+                if err == None:
+                    user.ui_status_label_text.set(settings.UI_STATUS_MSG_ERROR)
+                    user.ui_status_label_color('red')
                 if err == settings.ERROR_NONE:
                     user.status = settings.USER_STATE_INITIAL
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_INITIAL)
@@ -184,12 +193,13 @@ class Command:
     async def send(self, msg):
         await self.ws_q.put(msg)
     async def checkResponse(self, req):
-        while True:
-            res = await self.res_q.get()
-            self.res_q.task_done()
-            # (data['request'], data['err'], data['msg'])
-            if res[0] == req:
-                return res[1]
+        res = await self.res_q.get()
+        self.res_q.task_done()
+        # (data['request'], data['err'], data['msg'])
+        if res[0] == req:
+            return res[1]
+        else:
+            return None
     
     async def register(self, name, pw):
         await self.send(json.dumps( \
@@ -203,7 +213,7 @@ class Command:
         await self.send(json.dumps(
                 {settings.JSON_KEY_REQUEST: settings.JSON_VALUE_REQUEST_TYPE_UNREG, \
                  settings.JSON_KEY_NAME: name}))
-        res = await asyncio.wait_for(checkResponse(settings.JSON_VALUE_REQUEST_TYPE_UNREG), \
+        res = await asyncio.wait_for(self.checkResponse(settings.JSON_VALUE_REQUEST_TYPE_UNREG), \
                                timeout=settings.WAIT_FOR_RESPONSE_TOLERANCE)
         return res
     async def login(self, name, pw):

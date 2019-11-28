@@ -120,6 +120,11 @@ class UserBook:
                 del self.users[i]
                 self.updated = False
                 break
+        if settings.DEBUG:
+            l = ''
+            for u in self.users:
+                l += (u.name + ',')
+            logger.debug(f'all user: {l}')
     def isUsableName(self, name):
         if len(name) > settings.ALLOWED_LEN_FOR_NAME:
             return False
@@ -323,7 +328,6 @@ class ChatRoom:
                         u = self.user_book.register(data[settings.JSON_KEY_NAME], data[settings.JSON_KEY_PASSWORD])
                         if u != None:
                             res = self.constructSuccessMsg(settings.JSON_VALUE_REQUEST_TYPE_REG)
-                            
                         else:
                             res = self.constructErrorMsg( \
                                     settings.JSON_VALUE_REQUEST_TYPE_REG, \
@@ -341,6 +345,8 @@ class ChatRoom:
                     else:
                         self.user_book.unregister(data[settings.JSON_KEY_NAME])
                         await self.removeOnlineUser(websocket)
+                        res = self.constructSuccessMsg(settings.JSON_VALUE_REQUEST_TYPE_UNREG)
+                        await asyncio.wait([websocket.send(res)])
                 
                 else:
                     logger.error(f'unsupported event: {data}')
@@ -430,7 +436,7 @@ if __name__ == "__main__":
     logger.addHandler(log_file_handler)
     
     if settings.DEBUG == False or settings.WS_MOD_LOG == False or debug == False:
-        ws_logger = logging.getLogger('websockets.server')
+        ws_logger = logging.getLogger('websockets')
         ws_logger.setLevel(logging.WARNING)
     
     logger.debug(f'python sys.path: {sys.path}')

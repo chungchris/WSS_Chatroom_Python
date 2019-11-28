@@ -81,7 +81,7 @@ def wssClientGUIMain(cmd_q):
     def unregister():
         if client.status != settings.USER_STATE_LOGIN:
             return
-        cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_REG, client.name))
+        cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_UNREG, client.name))
     def login():
         if client.status != settings.USER_STATE_INITIAL:
             status_label_text.set(settings.UI_STATUS_MSG_INITIAL)
