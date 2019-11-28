@@ -41,12 +41,12 @@ class UserBook:
         self.updated = True
         self.password = pw
         self.chunksize = 64*1024
-        self.load()
+        self._load()
     
-    def getKey(self, password):
+    def _getKey(self, password):
         hasher = SHA256.new(password.encode('utf-8'))
         return hasher.digest()
-    def encrypt(self, key, filename):
+    def _encrypt(self, key, filename):
         outputFile = filename + '.aes'
         filesize = str(os.path.getsize(filename)).zfill(16)
         IV = Random.new().read(16)
@@ -62,7 +62,7 @@ class UserBook:
                     elif len(chunk)%16 != 0:
                         chunk += b' ' * (16 - (len(chunk) % 16))
                     outfile.write(encryptor.encrypt(chunk))
-    def decrypt(self, key, filename):
+    def _decrypt(self, key, filename):
         chunksize = 64 * 1024
         outputFile = filename[:-4]
         with open(filename, 'rb') as infile:
@@ -78,12 +78,12 @@ class UserBook:
                     outfile.truncate(filesize)
     
     # only called once as server start
-    def load(self):
+    def _load(self):
         if not os.path.isfile('./' + settings.USER_BOOK_FILE + '.aes'):
             logger.debug('no user book existed')
             return
         try:
-            self.decrypt(self.getKey(self.password), settings.USER_BOOK_FILE + '.aes')
+            self._decrypt(self._getKey(self.password), settings.USER_BOOK_FILE + '.aes')
             with open(settings.USER_BOOK_FILE, 'r') as j_file:
                 data = json.load(j_file)
                 for k,v in data.items():
@@ -105,7 +105,7 @@ class UserBook:
                 try:
                     with open(settings.USER_BOOK_FILE, 'w') as j_file:
                         json.dump(d, j_file)
-                    self.encrypt(self.getKey(self.password), settings.USER_BOOK_FILE)
+                    self._encrypt(self._getKey(self.password), settings.USER_BOOK_FILE)
                 except Exception as e:
                     logger.error(f'update user book error: {e}')
                 else:
