@@ -146,7 +146,6 @@ def wssClientGUIMain(cmd_q):
     text_text.insert(tk.END, 'text here...')
     send_button = tk.Button(text_frame, text='SEND', fg='black', command=send)
     send_button.pack(side=tk.LEFT)
-    # TODO: add scrollbar
     
     # status frame
     status_label_text = tk.StringVar()

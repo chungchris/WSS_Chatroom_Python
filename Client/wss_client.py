@@ -169,7 +169,6 @@ async def connect(ssl_context, ws_q, res_q, \
         else:
             task2 = asyncio.create_task(getMsgFromWS(websocket, res_q, user=o))
             task3 = asyncio.create_task(processCommandFromGUI(cmd_q, ws_q, res_q, loop, o))
-            # TODO: task4 to pass update to gui. maybe needless
             tasks = [task1, task2, task3]
         
         # Wait until the queue is fully processed.
