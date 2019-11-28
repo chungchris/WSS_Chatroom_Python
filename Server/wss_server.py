@@ -29,80 +29,11 @@ needIncludePath = []
 
 ##########
 
-''' test section begin
-
-async def hello(websocket, path):
-    name = await websocket.recv()
-    print(f"< {name}")
-    eprint('websocket:', websocket)
-    #eprint('websocket module path:', websockets.__file__)
-    #eprint('path:', path)
-
-    greeting = f"Hello {name}!"
-
-    await websocket.send(greeting)
-    print(f'sent "{greeting}" for the coming msg')
-
-# -----
-
-import datetime
-import random
-async def time(websocket, path):
-    while True:
-        now = datetime.datetime.utcnow().isoformat() + "Z"
-        await websocket.send(now)
-        await asyncio.sleep(random.random() * 3)
-
-# -----
-        
-import json
-STATE = {"value": 0}
-USERS = set()
-def state_event():
-    return json.dumps({"type": "state", **STATE})
-def users_event():
-    return json.dumps({"type": "users", "count": len(USERS)})
-async def notify_state():
-    if USERS:  # asyncio.wait doesn't accept an empty list
-        message = state_event()
-        await asyncio.wait([user.send(message) for user in USERS])
-async def notify_users():
-    if USERS:  # asyncio.wait doesn't accept an empty list
-        message = users_event()
-        await asyncio.wait([user.send(message) for user in USERS])
-async def register(websocket):
-    USERS.add(websocket)
-    await notify_users()
-async def unregister(websocket):
-    USERS.remove(websocket)
-    await notify_users()
-async def counter(websocket, path):
-    # register(websocket) sends user_event() to websocket
-    await register(websocket)
-    try:
-        await websocket.send(state_event())
-        async for message in websocket:
-            data = json.loads(message)
-            if data["action"] == "minus":
-                STATE["value"] -= 1
-                await notify_state()
-            elif data["action"] == "plus":
-                STATE["value"] += 1
-                await notify_state()
-            else:
-                logging.error("unsupported event: {}", data)
-    finally:
-        await unregister(websocket)
-        
-test section end '''
-
-##########
-
 class User:
     def __init__(self, name, pw):
         self.name = name  # unique in user book
         self.password = pw  # TODO: hash first
-        #self.color
+
 class UserBook:
     def __init__(self):
         self.users = []
@@ -208,9 +139,7 @@ class UserBook:
                 return False
         return True
     def getValidRegisteredUser(self, name, pw):
-        logger.debug('getValidRegisteredUser')
         for u in self.users:
-            logger.debug(f'getValidRegisteredUser: {u.name} {u.password}')
             if u.name == name and u.password == pw:
                 return u
         return None
@@ -237,7 +166,8 @@ class ChatRoom:
     def getLastMsg(self):
         return self.msg_buffer[self.last_msg]
     def isValidMsg(self, msg):
-        return True  # TODO:
+        # TODO:
+        return True
     
     def getUserNameByWS(self, websocket):
         if websocket in self.online_users:
@@ -316,14 +246,15 @@ class ChatRoom:
     async def handleRequest(self, websocket, path):
         try:
             # a websocket is stand for a single user
-            # send the initial state to the new-coming user
-            await websocket.send('hi from server')
-            logger.debug('sent initial state to client')
+            # TODO: send the initial state to the new-coming user
+            if settings.DEBUG:
+                await websocket.send('hi from server')
+                logger.debug('sent initial state to client')
             
             # async loop here to check whenever there is msg from 'the' user
             async for message in websocket:
                 
-                logger.info(f'got msg: {message} from {websocket}')
+                logger.debug(f'got msg: {message} from {websocket}')
                 data = json.loads(message)
                 
                 ### user typed message ###
@@ -336,7 +267,7 @@ class ChatRoom:
                     elif not self.isValidMsg(data['msg']):
                         res = self.constructErrorMsg(data[settings.JSON_KEY_REQUEST], \
                                                      settings.ERROR_ILLIGAL_MSG)
-                        logging.error(f'illigal msg: {data}')
+                        logging.debug(f'illigal msg: {data}')
                         await asyncio.wait([websocket.send(res)])
                     else:
                         msg = data[settings.JSON_KEY_MSG]
@@ -361,7 +292,7 @@ class ChatRoom:
                         else:
                             res = self.constructErrorMsg(data[settings.JSON_KEY_REQUEST], \
                                                          settings.ERROR_WRONG_LOGIN_IDENTITY)
-                            logging.warning(f'wrong name/pw when login: {data}')
+                            logging.debug(f'wrong name/pw when login: {data}')
                             await asyncio.wait([websocket.send(res)])
                             
                 # TODO: logout
@@ -380,13 +311,13 @@ class ChatRoom:
                         res = self.constructErrorMsg( \
                                 settings.JSON_VALUE_REQUEST_TYPE_REG, \
                                 settings.ERROR_INVALID_REG_NAME)
-                        logging.error(f'invalid reg name: {data}')
+                        logging.debug(f'invalid reg name: {data}')
                         await asyncio.wait([websocket.send(res)])
                     elif not self.user_book.isUsablePW(data[settings.JSON_KEY_PASSWORD]):
                         res = self.constructErrorMsg( \
                                 settings.JSON_VALUE_REQUEST_TYPE_REG, \
                                 settings.ERROR_INVALID_REG_PW)
-                        logging.error(f'invalid reg pw: {data}')
+                        logging.debug(f'invalid reg pw: {data}')
                         await asyncio.wait([websocket.send(res)])
                     else:
                         u = self.user_book.register(data[settings.JSON_KEY_NAME], data[settings.JSON_KEY_PASSWORD])
@@ -417,52 +348,34 @@ class ChatRoom:
             logger.warning(f'reading socket terminated: {e}')
         finally:
             # enter when connection closed
-            logger.error(f'{websocket} disconnected!!!!!!!!!!!!')
+            logger.error(f'websocket {websocket} disconnected!!')
             await self.removeOnlineUser(websocket)
 
-async def testtest():
-    logger.debug('testtest')
-    while True:
-        logger.debug('testtest......')
-        await asyncio.sleep(2)
+#####
 
 def serverMain(port=settings.DEFAULT_WSS_PORT):
+    # TODO: support specified cert in cmd
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     localhost_crt = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_CRT)
     localhost_key = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_KEY)
     ssl_context.load_cert_chain(localhost_crt, localhost_key)
-
-    ''' test section begin '''
     
-    # echo greeting to python client
-    #start_server = websockets.serve(hello, "localhost", port, ssl=ssl_context)
-    #print('server started! waiting for any msg coming')
-    
-    # send time to browser client
-    #start_server = websockets.serve(time, "localhost", port)
-    #print('server started! waiting for connection')
-    
-    # browser client: any client can increment or decrement a counter.
-    #   Updates are propagated to all connected clients.
-    #start_server = websockets.serve(counter, "localhost", port)
-    #print('server started! waiting for connection')
-    
-    ''' test section end '''
-    
-    start_server = websockets.serve(chat_room.handleRequest, 'localhost', port, ssl=ssl_context)
-    logger.warning('server started! waiting for connection from clients')
-    print('server started!')
+    try:
+        start_server = websockets.serve(chat_room.handleRequest, 'localhost', port, ssl=ssl_context)
+    except Exception as e:
+        logger.error(f'websockets.serve error: {e}')
+        return
+    else:
+        logger.warning('server started! waiting for connection from clients')
+        print('server started!')
 
     tasks = [
         start_server,
         asyncio.ensure_future(chat_room.user_book.store())
     ]
-
-    #asyncio.get_event_loop().run_until_complete(start_server)
+    
     asyncio.get_event_loop().run_until_complete(asyncio.wait(tasks))
     asyncio.get_event_loop().run_forever()
-
-##########
 
 if __name__ == "__main__":
     for p in needIncludePath:
@@ -494,6 +407,7 @@ if __name__ == "__main__":
         log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)i - %(message)s')
     else:
         log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
     from logging.handlers import RotatingFileHandler
     # TODO: test whether rotate actually work
     log_file_handler = RotatingFileHandler(settings.LOG_FILE, mode='a', \
@@ -523,7 +437,7 @@ if __name__ == "__main__":
     
     chat_room = ChatRoom(args.user_book_pw)
     
-    # will block the main thread
+    # will then block the main thread
     if args.port:
         logging.debug(f'will start server at port {args.port}')
         serverMain(port=args.port)

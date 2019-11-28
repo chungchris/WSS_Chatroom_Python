@@ -1,25 +1,33 @@
 #!/bin/python3
+# -*- coding: utf-8 -*-
 
 DEBUG = True
-DEVTEST = True
+
+# LOG
+LOG_FILE = 'client.log'
+MAX_LOG_SIZE = 32  #(MB)
+WS_MOD_LOG = False
 
 # CLIENT CONFIG
 DEFAULT_WSS_HOST = 'wss://localhost'
 DEFAULT_WSS_PORT = 8766
-MAX_MSG_LEN = 1024
-MIN_SEND_MSG_INTERVAL = 0.5  #s
-WAIT_FOR_RESPONSE_TOLERANCE = 5
+
+# SSL
+DEFAULT_SSL_CRT = 'server.crt'
+
+# QUEUE
 WS_Q_SIZE = 128
 RESPONSE_Q_SIZE = 128
 CMD_Q_SIZE = 32
 
-# LOG
-LOG_FILE = 'client.log'
-MAX_LOG_SIZE = 32  #MB
-WS_MOD_LOG = False
+# MESSAGE
+MAX_MSG_LEN = 1024
+MIN_SEND_MSG_INTERVAL = 0.5  #(s)
+WAIT_FOR_RESPONSE_TOLERANCE = 5
 
-# SSL
-DEFAULT_SSL_CRT = 'server.crt'
+# USER
+USER_STATE_INITIAL = 1
+USER_STATE_LOGIN = 2
 
 # UX
 ALLOWED_CHAR_FOR_NAME = set(['A','B','C','D','E','F','G','H','I','J','K','L', \
@@ -36,9 +44,6 @@ ALLOWED_CHAR_FOR_PASSWORD = set(['A','B','C','D','E','F','G','H','I','J','K', \
                                 '3','4','5','6','7','8','9'])
 ALLOWED_LEN_FOR_PASSWORD_MIN = 4
 ALLOWED_LEN_FOR_PASSWORD_MAX = 16
-
-USER_STATE_INITIAL = 1
-USER_STATE_LOGIN = 2
 
 UI_STATUS_MSG_ERROR = 'Something wrong...'
 UI_STATUS_MSG_INITIAL = 'Please login or register'

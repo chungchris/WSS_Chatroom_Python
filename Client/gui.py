@@ -5,6 +5,8 @@ Created on Tue Nov 26 14:22:34 2019
 
 @author: chungchris
 """
+
+import argparse
 import logging
 import sys
 import time
@@ -188,6 +190,7 @@ def wssClientGUIMain(cmd_q):
     logger.warning('GUI ready')
     window.mainloop()
     
+# running on wss_client_thread
 def startWSSClient():
     logger.warning('start wss client agent thread')
     while not guiReady:
@@ -196,22 +199,34 @@ def startWSSClient():
     # call wss_client
     # this thread will be blocked by async loop
     global cmd_q, client, obj_chat_room, status_label_text, status_label_color
-    client = wss_client.Client()
+    client = wss_client.Client(args.port)
     client.startFromGUI(cmd_q, \
                         obj_chat_room, status_label_text, status_label_color)
 
 #####
 
 # set logger
-if __name__ == "__main__":
-    logger = logging.getLogger()
-    logging.basicConfig(filename=settings.LOG_FILE)
+logger = logging.getLogger()
+logging.basicConfig(filename=settings.LOG_FILE)
+
+parser = argparse.ArgumentParser(description='Start a WSS Client GUI.')
+parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
+                    help=f'connecting to server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
+parser.add_argument('-d', '--debug', dest='debug', type=int, \
+                    help=f'number. enable debug log or not. (default) 0- disabled; 1- enabled. log file is {settings.LOG_FILE}; 2- enabled and print to stderr as well')
+args, unknown = parser.parse_known_args()
+
+if args.debug:
+    if args.debug == 0:
+        debug = False
+    elif args.debug == 1 or args.debug == 2:
+        debug = True
+    else:
+        debug = False
 else:
-    logger = logging.getLogger(__name__)
-    import logging.config
-    logging.config.fileConfig('logging.conf')
-    
-if settings.DEBUG:
+    debug = False
+
+if settings.DEBUG and debug:
     log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s%(funcName)s:%(lineno)i - %(message)s')
 else:
     log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -222,14 +237,15 @@ log_file_handler = RotatingFileHandler(settings.LOG_FILE, mode='a', \
                                        maxBytes=settings.MAX_LOG_SIZE*1024*1024, \
                                        backupCount=2, encoding=None, delay=0)
 log_file_handler.setFormatter(log_formatter)
+
 if settings.DEBUG:
     logger.setLevel(logging.DEBUG)
     log_file_handler.setLevel(logging.DEBUG)
-    
-    stderr_handler = logging.StreamHandler(sys.stderr)
-    stderr_handler.setLevel(logging.DEBUG)
-    stderr_handler.setFormatter(log_formatter)
-    logger.addHandler(stderr_handler)
+    if args.debug and args.debug == 2:
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setLevel(logging.DEBUG)
+        stderr_handler.setFormatter(log_formatter)
+        logger.addHandler(stderr_handler)
 else:
     logger.setLevel(logging.WARNING)
     my_handler.setLevel(logging.WARNING)

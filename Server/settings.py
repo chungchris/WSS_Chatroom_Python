@@ -1,8 +1,8 @@
 #!/bin/python3
+# -*- coding: utf-8 -*-
 
 # DEBUG
 DEBUG = True
-DEVTEST = True
 WS_MOD_LOG = False
 
 # SERVER CONFIG
@@ -10,15 +10,15 @@ DEFAULT_WSS_PORT = 8766
 
 # LOG
 LOG_FILE = 'server.log'
-MAX_LOG_SIZE = 64 #MB
+MAX_LOG_SIZE = 64 #(MB)
 
 # SSL
 DEFAULT_SSL_CRT = 'server.crt'
 DEFAULT_SSL_KEY = 'server.key'
 
-# MSG
-MSG_BUFFER_MAX_AMOUNT = 1024
+# MESSAGE
 MAX_MSG_LEN = 1024
+MSG_BUFFER_MAX_AMOUNT = 1024
 
 # USERS
 RESISTERED_USER_MAX_AMOUNT = 1000
