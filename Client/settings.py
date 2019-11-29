@@ -45,13 +45,18 @@ ALLOWED_CHAR_FOR_PASSWORD = set(['A','B','C','D','E','F','G','H','I','J','K', \
 ALLOWED_LEN_FOR_PASSWORD_MIN = 4
 ALLOWED_LEN_FOR_PASSWORD_MAX = 16
 
+MAX_MSG_AMOUNT_SHOWN = 200
+
 UI_STATUS_MSG_ERROR = 'Something wrong...'
 UI_STATUS_MSG_INITIAL = 'Please login or register'
-UI_STATUS_MSG_INVALID_REG_NAME = 'Name only allow English alphabes. Or the name has already been registered'
-UI_STATUS_MSG_INVALID_REG_PW = f'Password only allow English alphabes and numbers. length between {ALLOWED_LEN_FOR_PASSWORD_MIN} and {ALLOWED_LEN_FOR_PASSWORD_MAX}'
+UI_STATUS_MSG_INVALID_REG_NAME = 'Name only allow English alphabets. Or the name has already been registered'
+UI_STATUS_MSG_INVALID_REG_PW = f'Password only allow English alphabets and numbers. length between {ALLOWED_LEN_FOR_PASSWORD_MIN} and {ALLOWED_LEN_FOR_PASSWORD_MAX}'
 UI_STATUS_MSG_REG_DONE = 'Register successed. Please login...'
 UI_STATUS_MSG_INVALID_LOGIN = 'Name/Password not registered yet or incorrect'
 UI_STATUS_MSG_LOGIN = 'You are currently login in the room'
+UI_STATUS_MSG_CONNECTED = 'Seerver connected'
+UI_STATUS_MSG_TOO_MANY_ONLINE_USER = 'Too many online users now. Please login later'
+UI_STATUS_MSG_TOO_MANY_REGISTER_USER = 'Too many registered users. Please try some other day'
 
 # MSG B/T SERVER/CLIENT
 JSON_KEY_REQUEST = 'request'
@@ -84,3 +89,5 @@ ERROR_INVALID_UNREG_REQ = -6
 ERROR_INVALID_REG_REQ = -7
 ERROR_INVALID_REG_NAME = -8
 ERROR_INVALID_REG_PW = -9
+ERROR_TOO_MANY_ONLINE_USER = -10
+ERROR_TOO_MANY_REGISTER_USER = -11

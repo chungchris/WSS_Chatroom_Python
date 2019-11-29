@@ -14,7 +14,7 @@ import os
 import pathlib
 import ssl
 import sys
-import traceback
+#import traceback
 
 import websockets
 
@@ -90,8 +90,11 @@ class UserBook:
                     self.users.append(User(k, v))
         except Exception as e:
             logger.error(f'load user book error: {e}')
-        finally:
+            # if decry fail. rename the old one and create an new user book
+            os.rename(settings.USER_BOOK_FILE + '.aes', settings.USER_BOOK_FILE + '_old' + '.aes')
+        else:
             logger.debug('user book loaded')
+        finally:
             self.updated = True
     
     async def store(self):
@@ -301,6 +304,12 @@ class ChatRoom:
                                                      settings.ERROR_INVALID_LOGIN)
                         logging.error(f'invalid name/pw when login: {data}')
                         await asyncio.wait([websocket.send(res)])
+                    elif len(self.online_users) >= settings.ONLINE_USER_MAX_AMOUNT:
+                        # websockets itself doesn't have limitation on # of connections
+                        res = self.constructErrorMsg(data[settings.JSON_KEY_REQUEST], \
+                                                     settings.ERROR_TOO_MANY_ONLINE_USER)
+                        logging.error(f'reach max online user')
+                        await asyncio.wait([websocket.send(res)])
                     else:
                         u = self.user_book.getValidRegisteredUser(data[settings.JSON_KEY_NAME], data[settings.JSON_KEY_PASSWORD])
                         if u != None:
@@ -324,6 +333,11 @@ class ChatRoom:
                                 settings.JSON_VALUE_REQUEST_TYPE_REG, \
                                 settings.ERROR_INVALID_REG_REQ)
                         logging.error(f'invalid reg req: {data}')
+                        await asyncio.wait([websocket.send(res)])
+                    elif len(self.user_book.users) >= settings.RESISTERED_USER_MAX_AMOUNT:
+                        res = self.constructErrorMsg(data[settings.JSON_KEY_REQUEST], \
+                                                     settings.ERROR_TOO_MANY_ONLINE_USER)
+                        logging.error(f'reach max online user')
                         await asyncio.wait([websocket.send(res)])
                     elif not self.user_book.isUsableName(data[settings.JSON_KEY_NAME]):
                         res = self.constructErrorMsg( \

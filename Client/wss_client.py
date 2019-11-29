@@ -60,6 +60,9 @@ async def processCommandFromGUI(cmd_q, ws_q, res_q, loop, user):
                 elif err == settings.ERROR_WRONG_LOGIN_IDENTITY:
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_INVALID_LOGIN)
                     user.ui_status_label_color('red')
+                elif err == settings.ERROR_TOO_MANY_ONLINE_USER:
+                    user.ui_status_label_text.set(settings.UI_STATUS_MSG_TOO_MANY_ONLINE_USER)
+                    user.ui_status_label_color('red')
                 else:
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_ERROR)
                     user.ui_status_label_color('red')
@@ -77,6 +80,9 @@ async def processCommandFromGUI(cmd_q, ws_q, res_q, loop, user):
                     user.ui_status_label_color('red')
                 elif err == settings.ERROR_INVALID_REG_PW:
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_INVALID_REG_PW)
+                    user.ui_status_label_color('red')
+                elif err == settings.ERROR_TOO_MANY_REGISTER_USER:
+                    user.ui_status_label_text.set(settings.UI_STATUS_MSG_TOO_MANY_REGISTER_USER)
                     user.ui_status_label_color('red')
                 else:
                     user.ui_status_label_text.set(settings.UI_STATUS_MSG_ERROR)
@@ -110,6 +116,7 @@ async def pushMsgToWS(ws_q, websocket):
 
 # wait for there is any msg sent from server, push them to res_q or UI
 async def getMsgFromWS(websocket, res_q, user=None):
+    msg_count = 0
     try:
         async for message in websocket:
             logger.debug(f'got from ws: {message}')
@@ -126,12 +133,18 @@ async def getMsgFromWS(websocket, res_q, user=None):
                         if data[settings.JSON_KEY_TYPE] \
                                 == settings.JSON_VALYE_TYPE_TYPE_MESSAGE:
                             msg = data[settings.JSON_KEY_NAME] + ': ' + data[settings.JSON_KEY_MSG]
-                            user.ui_room.insert(tk.END, f'{msg}\n')
+                            user.ui_room.insert(tk.END, f'{msg}')
+                            msg_count += 1
                         elif data[settings.JSON_KEY_TYPE] \
                                 == settings.JSON_VALYE_TYPE_TYPE_USER:
                             msg = '--- User \'' + data[settings.JSON_KEY_NAME] + '\' ' \
                                     + data[settings.JSON_KEY_MSG] + ' ---'
-                            user.ui_room.insert(tk.END, f'{msg}\n')
+                            # delete old msgs to prevent boom
+                            if msg_count > settings.MAX_MSG_AMOUNT_SHOWN:
+                                user.ui_room.delete(0, last=int(settings.MAX_MSG_AMOUNT_SHOWN/2))
+                                msg_count = user.ui_room.size()
+                            user.ui_room.insert(tk.END, f'{msg}')
+                            msg_count += 1
                 else:
                     logger.error(f'unsupport msg:{data}')
             except Exception as e:
@@ -158,6 +171,8 @@ async def connect(ssl_context, ws_q, res_q, \
         uri, ssl=ssl_context
     ) as websocket:
         logger.warning('server connected')
+        o.ui_status_label_text.set(settings.UI_STATUS_MSG_CONNECTED)
+        o.ui_status_label_color('black')
         
         # Create a worker task to process the queue
         task1 = asyncio.create_task(pushMsgToWS(ws_q, websocket))

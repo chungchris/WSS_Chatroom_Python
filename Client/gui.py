@@ -117,6 +117,8 @@ def wssClientGUIMain(cmd_q):
         
         text = text_text.get('1.0', tk.END)
         l = len(text)
+        text = text.strip('\n')
+        text = text.strip()
         if l>0:
             if l > settings.MAX_MSG_LEN:
                 text = text[:settings.MAX_MSG_LEN]
