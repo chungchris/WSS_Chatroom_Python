@@ -1,0 +1,3 @@
+[console_scripts]
+wss_chat_room_server = wss_chat_room_server:main
+

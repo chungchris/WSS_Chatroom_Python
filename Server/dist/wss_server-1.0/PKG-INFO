@@ -1,0 +1,17 @@
+Metadata-Version: 1.2
+Name: wss_server
+Version: 1.0
+Summary: WSS Chatroom Server
+Home-page: https://github.com/chungchris/WSS_Chatroom_Python
+Author: Chris-PY Chung
+Author-email: imchungchris@hotmail.com
+License: GPLv3
+Description: UNKNOWN
+Keywords: wss
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=3.6.1
