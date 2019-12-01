@@ -212,7 +212,7 @@ def runTest(cmd_q, test_case):
     with open('./Testcase/'+test_case, 'r') as tc:
         cmd = tc.readline()
         while cmd:
-            cmd.strip('\n')
+            cmd = cmd.strip('\n')
             if len(cmd) < 5:
                 cmd = tc.readline()
                 continue
@@ -222,9 +222,9 @@ def runTest(cmd_q, test_case):
                 tokens = cmd.split(';')
                 if tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_REG \
                     or tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_LOGIN:
-                    cmd_q.put((tokens[0],tokens[1],tokens[2].strip('\n')))
+                    cmd_q.put((tokens[0],tokens[1],tokens[2]))
                 else:
-                    cmd_q.put((tokens[0],tokens[1].strip('\n')))
+                    cmd_q.put((tokens[0],tokens[1]))
             cmd = tc.readline()
     print(f'### tester ### {test_case} done')
 
