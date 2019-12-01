@@ -233,8 +233,9 @@ class wssClientGUI:
         global logger
         logger = logging.getLogger(__name__)
         if test:
-            log_file = test_case + '_' + settings.LOG_FILE
+            log_file = './Testcase/' + test_case[:len(test_case)-4] + '_' + settings.LOG_FILE
             logging.basicConfig(filename=log_file)
+            logger.setLevel(logging.DEBUG)
         
         # start wss client agent
         if name:

@@ -133,16 +133,17 @@ async def getMsgFromWS(websocket, res_q, user=None):
                         if data[settings.JSON_KEY_TYPE] \
                                 == settings.JSON_VALYE_TYPE_TYPE_MESSAGE:
                             msg = data[settings.JSON_KEY_NAME] + ': ' + data[settings.JSON_KEY_MSG]
+                            # delete old msgs to prevent boom
+                            if msg_count > settings.MAX_MSG_AMOUNT_SHOWN:
+                                logger.debug('too much msgs')
+                                user.ui_room.delete(0, last=int(settings.MAX_MSG_AMOUNT_SHOWN/2))
+                                msg_count = user.ui_room.size()
                             user.ui_room.insert(tk.END, f'{msg}')
                             msg_count += 1
                         elif data[settings.JSON_KEY_TYPE] \
                                 == settings.JSON_VALYE_TYPE_TYPE_USER:
                             msg = '--- User \'' + data[settings.JSON_KEY_NAME] + '\' ' \
                                     + data[settings.JSON_KEY_MSG] + ' ---'
-                            # delete old msgs to prevent boom
-                            if msg_count > settings.MAX_MSG_AMOUNT_SHOWN:
-                                user.ui_room.delete(0, last=int(settings.MAX_MSG_AMOUNT_SHOWN/2))
-                                msg_count = user.ui_room.size()
                             user.ui_room.insert(tk.END, f'{msg}')
                             msg_count += 1
                 else:
