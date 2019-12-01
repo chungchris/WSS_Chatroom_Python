@@ -22,6 +22,8 @@ import settings
 #####
 
 parser = argparse.ArgumentParser(description='Start WSS Chatroom test.')
+parser.add_argument('-m', '--mode', dest='mode', default='test', type=string,\
+                    help=f'test, verify, clean')
 parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
                     help=f'server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
 parser.add_argument('-u', '--users', dest='users', default=3, type=int, \
@@ -31,6 +33,19 @@ parser.add_argument('-f', '--frequency', dest='frequency', default=5, type=int, 
 parser.add_argument('-a', '--amount-of-msg', dest='amount', default=50, type=int, \
                     help=f'amount of messages each user will send')
 args, unknown = parser.parse_known_args()
+
+#####
+
+if args.mode == 'clean':
+    os.system(f'rm -rf ./Testcase')
+    os.system(f'rm -rf ./server.log')
+    os.system(f'rm -rf ./user_book*')
+    sys.exit(0)
+elif args.mode == 'verify':
+    sys.exit(0)
+elif args.mode != 'test':
+    print('no such mode')
+    sys.exit(0)
 
 #####
 

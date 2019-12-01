@@ -232,6 +232,9 @@ class wssClientGUI:
     def __init__(self, port, name=None, test=False, test_case=None):
         global logger
         logger = logging.getLogger(__name__)
+        if test:
+            log_file = test_case + '_' + settings.LOG_FILE
+            logging.basicConfig(filename=log_file)
         
         # start wss client agent
         if name:
