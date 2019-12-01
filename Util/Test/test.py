@@ -45,11 +45,18 @@ elif args.mode == 'verify':
     with open('./Testcase/last_test', 'r') as f:
         users = int(f.readline())
         amount = int(f.readline())
-        lf = f.readline()
         exp = users * amount
-        print(f'expect {exp} messages.')
+        print(f'with {users} user and each would send {amount} messages.')
+        print(f'...expect {exp} messages....')
+        print(f'collecting ... log files...')
+        os.system('ls ./Testcase/*.log | wc -l')
+        lf = f.readline()
         while lf: # each log file
             lf = lf.strip('\n')
+            if lf[:5] == 'time:':
+                t = int(int(lf[5:])/60)
+                print(f'expected time for running the test is {t} minutes')
+                break
             with open('./Testcase/'+lf, 'r') as log_file:
                 count = 0
                 log_line = log_file.readline()
@@ -68,7 +75,7 @@ elif args.mode != 'test':
 
 # start a server process
 def runServer():
-    os.system(f'python3.7 ../../Server/wss_server.py -u 5566 -p {args.port}')
+    os.system(f'python3.7 ../../Server/wss_server.py -u 5566 -p {args.port} -d 1')
 try:
     p = Process(target=runServer)
     p.start()
@@ -105,6 +112,7 @@ def genName():
 
 def genTest(name):
     file_name = 'tc_' + name + '.txt'
+    tt = 0
     with open('./Testcase/'+file_name, 'w') as f:
         n = '\n'
         # register
@@ -116,6 +124,7 @@ def genTest(name):
         # send msgs
         for _ in range(args.amount):
             t = (int(random.random()*(10**power)) % r[1]) + r[0]
+            tt += t
             msg = name*t
             if len(msg) > settings.MAX_MSG_LEN:
                 msg = msg[:settings.MAX_MSG_LEN]
@@ -124,6 +133,7 @@ def genTest(name):
         # unregister
         f.write(f'{settings.JSON_VALUE_REQUEST_TYPE_UNREG};{name}{n}')
         f.write(f'sleep2{n}')
+    return tt
 
 def runTest(file_name):
     print(f'### tester ### to start a client with tc name:{file_name}')
@@ -136,12 +146,16 @@ except FileExistsError:
 
 with open('./Testcase/last_test', 'w') as f:
     n = '\n'
+    maxtt = 0
     f.write(f'{args.users}{n}')
     f.write(f'{args.amount}{n}')
     for i in range(args.users):
         name = genName()
-        genTest(name)
+        tt = genTest(name)
+        if tt > maxtt:
+            maxtt = tt
         f.write(f'tc_{name}_client.log{n}')
+    f.write(f'time:{maxtt}{n}')
 print('### tester ### test cases generated under ./Testcase/')
 
 # start wss client gui for each user in indep process
