@@ -209,7 +209,7 @@ def startWSSClient(o):
 def runTest(cmd_q, test_case):
     time.sleep(5)
     print(f'### tester ### startTestThread {test_case}')
-    with open(test_case, 'r') as tc:
+    with open('./Testcase/'+test_case, 'r') as tc:
         cmd = tc.readline()
         while cmd:
             print(f'### tester ### cmd {cmd}')
@@ -221,7 +221,12 @@ def runTest(cmd_q, test_case):
                 time.sleep(int(cmd[5:]))
                 print(f'### tester ### sleep {int(cmd[5:])}')
             else:
-                cmd_q.put(cmd)
+                tokens = cmd.split(';')
+                if tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_REG
+                    or tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_LOGIN:
+                    cmd_q.put((tokens[0],tokens[1],tokens[2].strip('\n')))
+                else:
+                    cmd_q.put((tokens[0],tokens[1].strip('\n')))
             cmd = tc.readline()
 
 class wssClientGUI:

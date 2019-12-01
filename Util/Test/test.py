@@ -74,57 +74,40 @@ def genName():
             break
     return name
 
-def genTest(file_name):
-    with open(file_name, 'w') as f:
+def genTest(name):
+    file_name = 'tc_' + name + '.txt'
+    with open('./Testcase/'+file_name, 'w') as f:
+        n = '\n'
+        # register
+        f.write(f'{settings.JSON_VALUE_REQUEST_TYPE_REG};{name};5566{n}')
+        f.write(f'sleep2{n}')
+        # login
+        f.write(f'{settings.JSON_VALUE_REQUEST_TYPE_LOGIN};{name};5566{n}')
+        f.write(f'sleep2{n}')
+        # send msgs
         for _ in range(10):
-            n = '\n'
-            f.write(f'sleep2{n}')
-    '''
-    wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_REG, name, '5566'))
-    wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_LOGIN, name, '5566'))
-    for _ in range(a):
-        t = (int(random.random()*(10**power)) % f[1]) + f[0]
-        msg = name*t
-        if len(msg) > settings.MAX_MSG_LEN:
-            msg = msg[:settings.MAX_MSG_LEN]
-        wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_MSG, msg))
-    '''
-    
+            t = (int(random.random()*(10**power)) % f[1]) + f[0]
+            msg = name*t
+            if len(msg) > settings.MAX_MSG_LEN:
+                msg = msg[:settings.MAX_MSG_LEN]
+            f.write(f'{settings.JSON_VALUE_REQUEST_TYPE_MSG};{msg}{n}')
+            f.write(f'sleep{t}{n}')
+        # unregister
+        f.write(f'{settings.JSON_VALUE_REQUEST_TYPE_UNREG};{name}{n}')
+        f.write(f'sleep2{n}')
 
 import time
 def runTest(file_name):
     print(f'to start a client with tc name:{file_name}')
     gui.wssClientGUI(args.port, test=True, test_case=file_name)
-    
-    '''
-    # register
-    time.sleep(3)
-    wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_REG, name, '5566'))
-    # login
-    time.sleep(1)
-    wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_LOGIN, name, '5566'))
-    # send msg
-    time.sleep(1)
-    for _ in range(a):
-        t = (int(random.random()*(10**power)) % f[1]) + f[0]
-        msg = name*t
-        if len(msg) > settings.MAX_MSG_LEN:
-            msg = msg[:settings.MAX_MSG_LEN]
-        wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_MSG, msg))
-        time.sleep(t)
-    # unregister
-    time.sleep(2)
-    wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_UNREG))
-    '''
 
 p_clients = []
 for i in range(args.users):
     name = genName()
-    genTest('tc_' + name + '.txt')
+    genTest(name)
 for name in names:
     p = Process(target=runTest, args=('tc_' + name + '.txt',))
     p_clients.append(p)
     p.start()
 for p in p_clients:
     p.join()
-
