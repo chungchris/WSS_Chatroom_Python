@@ -212,14 +212,12 @@ def runTest(cmd_q, test_case):
     with open('./Testcase/'+test_case, 'r') as tc:
         cmd = tc.readline()
         while cmd:
-            print(f'### tester ### cmd {cmd}')
             cmd.strip('\n')
             if len(cmd) < 5:
                 cmd = tc.readline()
                 continue
             if cmd[:5] == 'sleep':
                 time.sleep(int(cmd[5:]))
-                print(f'### tester ### sleep {int(cmd[5:])}')
             else:
                 tokens = cmd.split(';')
                 if tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_REG \
@@ -228,6 +226,7 @@ def runTest(cmd_q, test_case):
                 else:
                     cmd_q.put((tokens[0],tokens[1].strip('\n')))
             cmd = tc.readline()
+    print(f'### tester ### {test_case} done')
 
 class wssClientGUI:
     def __init__(self, port, name=None, test=False, test_case=None):
