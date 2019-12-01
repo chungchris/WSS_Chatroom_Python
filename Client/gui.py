@@ -231,7 +231,7 @@ def runTest(cmd_q, test_case):
 class wssClientGUI:
     def __init__(self, port, name=None, test=False, test_case=None):
         global logger
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger()
         if test:
             log_file = './Testcase/' + test_case[:len(test_case)-4] + '_' + settings.LOG_FILE
             logging.basicConfig(filename=log_file)

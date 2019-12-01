@@ -22,7 +22,7 @@ import settings
 #####
 
 parser = argparse.ArgumentParser(description='Start WSS Chatroom test.')
-parser.add_argument('-m', '--mode', dest='mode', default='test', type=string,\
+parser.add_argument('-m', '--mode', dest='mode', default='test', type=str,\
                     help=f'test, verify, clean')
 parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
                     help=f'server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
@@ -49,8 +49,8 @@ elif args.mode == 'verify':
         exp = users * amount
         print(f'expect {exp} messages.')
         while lf: # each log file
-            lf.strip('\n')
-            with open(lf, 'r') as log_file:
+            lf = lf.strip('\n')
+            with open('./Testcase/'+lf, 'r') as log_file:
                 count = 0
                 log_line = log_file.readline()
                 while log_line: # each log line
@@ -134,14 +134,14 @@ try:
 except FileExistsError:
     pass
 
-with open('./Testcase/last_test'+, 'w') as f:
-    for i in range(args.users):
-        name = genName()
-        genTest(name)
+with open('./Testcase/last_test', 'w') as f:
     n = '\n'
     f.write(f'{args.users}{n}')
     f.write(f'{args.amount}{n}')
-    f.write(f'tc_{name}_client.log{n}')
+    for i in range(args.users):
+        name = genName()
+        genTest(name)
+        f.write(f'tc_{name}_client.log{n}')
 print('### tester ### test cases generated under ./Testcase/')
 
 # start wss client gui for each user in indep process
