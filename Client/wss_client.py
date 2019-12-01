@@ -279,7 +279,7 @@ def clientMain(mod_logger=None, cmd_q=None, o=None):
         localhost_crt = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_CRT)
         ssl_context.load_verify_locations(localhost_crt)
     except Exception as e:
-        logger.error(f'init ssl context error: {e}')
+        logger.critical(f'init ssl context error: {e}')
         return
     else:
         logger.debug('ssl ready')

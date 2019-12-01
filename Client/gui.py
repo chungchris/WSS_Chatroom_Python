@@ -192,75 +192,89 @@ def wssClientGUIMain(cmd_q):
     window.mainloop()
     
 # running on wss_client_thread
-def startWSSClient():
+def startWSSClient(o):
     logger.warning('start wss client agent thread')
     while not guiReady:
         time.sleep(0.1)
     
     # call wss_client
     # this thread will be blocked by async loop
-    global cmd_q, client, obj_chat_room, status_label_text, status_label_color
+    global client, obj_chat_room, status_label_text, status_label_color
     client = wss_client.Client(args.port)
-    client.startFromGUI(cmd_q, \
+    client.startFromGUI(o.cmd_q, \
                         obj_chat_room, status_label_text, status_label_color)
 
 #####
 
-# set logger
-logger = logging.getLogger()
-logging.basicConfig(filename=settings.LOG_FILE)
+class wssClientGUI:
+    def __init__(self, name=None):
+        # start wss client agent
+        if name:
+            tname = 'wss_client_thread' + tname
+        else:
+            tname = 'wss_client_thread'
+        self.wss_client_thread = threading.Thread(target=startWSSClient, name=tname, args=(self,))
+        self.wss_client_thread.daemon = True  # as soon as the main program exits, all the daemon threads are killed
+        self.wss_client_thread.start()
+        
+        # create q for gui event handler to pass action to wss_client
+        self.cmd_q = queue.Queue()
+        
+        # start gui running on main thread
+        self.startGUI()
+    
+    def startGUI(self):
+        wssClientGUIMain(self.cmd_q)   
+        logger.warning('window closed')
 
-parser = argparse.ArgumentParser(description='Start a WSS Client GUI.')
-parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
-                    help=f'connecting to server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
-parser.add_argument('-d', '--debug', dest='debug', type=int, \
-                    help=f'number. enable debug log or not. (default) 0- disabled; 1- enabled. log file is {settings.LOG_FILE}; 2- enabled and print to stderr as well')
-args, unknown = parser.parse_known_args()
+#####
 
-if args.debug:
-    if args.debug == 0:
-        debug = False
-    elif args.debug == 1 or args.debug == 2:
-        debug = True
+if __name__ == "__main__":
+    # set logger
+    logger = logging.getLogger()
+    logging.basicConfig(filename=settings.LOG_FILE)
+    
+    parser = argparse.ArgumentParser(description='Start a WSS Client GUI.')
+    parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
+                        help=f'connecting to server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
+    parser.add_argument('-d', '--debug', dest='debug', type=int, \
+                        help=f'number. enable debug log or not. (default) 0- disabled; 1- enabled. log file is {settings.LOG_FILE}; 2- enabled and print to stderr as well')
+    args, unknown = parser.parse_known_args()
+
+    if args.debug:
+        if args.debug == 0:
+            debug = False
+        elif args.debug == 1 or args.debug == 2:
+            debug = True
+        else:
+            debug = False
     else:
         debug = False
-else:
-    debug = False
 
-if settings.DEBUG and debug:
-    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s%(funcName)s:%(lineno)i - %(message)s')
-else:
-    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    if settings.DEBUG and debug:
+        log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s%(funcName)s:%(lineno)i - %(message)s')
+    else:
+        log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-from logging.handlers import RotatingFileHandler
-# TODO: test whether rotate actually work
-log_file_handler = RotatingFileHandler(settings.LOG_FILE, mode='a', \
-                                       maxBytes=settings.MAX_LOG_SIZE*1024*1024, \
-                                       backupCount=2, encoding=None, delay=0)
-log_file_handler.setFormatter(log_formatter)
+    from logging.handlers import RotatingFileHandler
+    # TODO: test whether rotate actually work
+    log_file_handler = RotatingFileHandler(settings.LOG_FILE, mode='a', \
+                                           maxBytes=settings.MAX_LOG_SIZE*1024*1024, \
+                                           backupCount=2, encoding=None, delay=0)
+    log_file_handler.setFormatter(log_formatter)
 
-if settings.DEBUG:
-    logger.setLevel(logging.DEBUG)
-    log_file_handler.setLevel(logging.DEBUG)
-    if args.debug and args.debug == 2:
-        stderr_handler = logging.StreamHandler(sys.stderr)
-        stderr_handler.setLevel(logging.DEBUG)
-        stderr_handler.setFormatter(log_formatter)
-        logger.addHandler(stderr_handler)
-else:
-    logger.setLevel(logging.WARNING)
-    my_handler.setLevel(logging.WARNING)
-logger.addHandler(log_file_handler)
+    if settings.DEBUG:
+        logger.setLevel(logging.DEBUG)
+        log_file_handler.setLevel(logging.DEBUG)
+        if args.debug and args.debug == 2:
+            stderr_handler = logging.StreamHandler(sys.stderr)
+            stderr_handler.setLevel(logging.DEBUG)
+            stderr_handler.setFormatter(log_formatter)
+            logger.addHandler(stderr_handler)
+    else:
+        logger.setLevel(logging.WARNING)
+        my_handler.setLevel(logging.WARNING)
+    logger.addHandler(log_file_handler)
     
-# start wss client agent
-wss_client_thread = threading.Thread(target=startWSSClient, name='wss_client_thread')
-wss_client_thread.daemon = True  # as soon as the main program exits, all the daemon threads are killed
-wss_client_thread.start()
-    
-# create q for gui event handler to pass action to wss_client
-cmd_q = queue.Queue()
-
-# start gui running on main thread
-wssClientGUIMain(cmd_q)
-logger.warning('window closed')
+    wssClientGUI()
     

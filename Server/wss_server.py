@@ -388,10 +388,16 @@ class ChatRoom:
 
 def serverMain(port=settings.DEFAULT_WSS_PORT):
     # TODO: support specified cert in cmd
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    localhost_crt = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_CRT)
-    localhost_key = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_KEY)
-    ssl_context.load_cert_chain(localhost_crt, localhost_key)
+    try:
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        localhost_crt = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_CRT)
+        localhost_key = pathlib.Path(__file__).with_name(settings.DEFAULT_SSL_KEY)
+        ssl_context.load_cert_chain(localhost_crt, localhost_key)
+    except Exception as e:
+        logger.critical(f'load ssl context error:{e}')
+        return
+    else:
+        logger.debug('ssl ready')
     
     try:
         start_server = websockets.serve(chat_room.handleRequest, 'localhost', port, ssl=ssl_context)
