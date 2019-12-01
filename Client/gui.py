@@ -208,6 +208,9 @@ def startWSSClient(o):
 
 class wssClientGUI:
     def __init__(self, port, name=None):
+        global logger
+        logger = logging.getLogger(__name__)
+        
         # start wss client agent
         if name:
             tname = 'wss_client_thread' + tname
