@@ -206,8 +206,19 @@ def startWSSClient(o):
 
 #####
 
+def startTestThread(cmd_q, test_case):
+    with open(test_case, 'r') as tc:
+        for cmd in rc.readline():
+            cmd.strip('\n')
+            if len(cmd) < 5:
+                continue
+            if cmd[:5] == 'sleep':
+                time.sleep(int(cmd[5:]))
+            else:
+                cmd_q.put(cmd)
+
 class wssClientGUI:
-    def __init__(self, port, name=None):
+    def __init__(self, port, name=None, test=False, test_case=None):
         global logger
         logger = logging.getLogger(__name__)
         
@@ -223,6 +234,10 @@ class wssClientGUI:
         
         # create q for gui event handler to pass action to wss_client
         self.cmd_q = queue.Queue()
+        
+        # start test thread
+        if test:
+            startTestThread(self.cmd_q, test_case)
         
         # start gui running on main thread
         self.startGUI()
