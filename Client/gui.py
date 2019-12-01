@@ -200,19 +200,20 @@ def startWSSClient(o):
     # call wss_client
     # this thread will be blocked by async loop
     global client, obj_chat_room, status_label_text, status_label_color
-    client = wss_client.Client(args.port)
+    client = wss_client.Client(o.port)
     client.startFromGUI(o.cmd_q, \
                         obj_chat_room, status_label_text, status_label_color)
 
 #####
 
 class wssClientGUI:
-    def __init__(self, name=None):
+    def __init__(self, port, name=None):
         # start wss client agent
         if name:
             tname = 'wss_client_thread' + tname
         else:
             tname = 'wss_client_thread'
+        self.port = port
         self.wss_client_thread = threading.Thread(target=startWSSClient, name=tname, args=(self,))
         self.wss_client_thread.daemon = True  # as soon as the main program exits, all the daemon threads are killed
         self.wss_client_thread.start()
@@ -276,5 +277,5 @@ if __name__ == "__main__":
         my_handler.setLevel(logging.WARNING)
     logger.addHandler(log_file_handler)
     
-    wssClientGUI()
+    wssClientGUI(args.port)
     
