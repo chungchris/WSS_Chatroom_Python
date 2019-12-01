@@ -222,7 +222,7 @@ def runTest(cmd_q, test_case):
                 print(f'### tester ### sleep {int(cmd[5:])}')
             else:
                 tokens = cmd.split(';')
-                if tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_REG
+                if tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_REG \
                     or tokens[0] == settings.JSON_VALUE_REQUEST_TYPE_LOGIN:
                     cmd_q.put((tokens[0],tokens[1],tokens[2].strip('\n')))
                 else:

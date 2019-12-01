@@ -48,11 +48,11 @@ print(f'### tester ### server started')
 
 # start wss client gui for each user in indep process
 if args.frequency > 1:
-    f = (1, args.frequency)
+    r = (1, args.frequency)
 else:
-    f = (1, 5)
+    r = (1, 5)
 import math
-power = int(math.log(f[1], 10))+2
+power = int(math.log(r[1], 10))+2
 
 a = args.amount
 nn = len(settings.ALLOWED_CHAR_FOR_NAME)
@@ -86,7 +86,7 @@ def genTest(name):
         f.write(f'sleep2{n}')
         # send msgs
         for _ in range(10):
-            t = (int(random.random()*(10**power)) % f[1]) + f[0]
+            t = (int(random.random()*(10**power)) % r[1]) + r[0]
             msg = name*t
             if len(msg) > settings.MAX_MSG_LEN:
                 msg = msg[:settings.MAX_MSG_LEN]
@@ -101,6 +101,11 @@ def runTest(file_name):
     print(f'to start a client with tc name:{file_name}')
     gui.wssClientGUI(args.port, test=True, test_case=file_name)
 
+try:
+    os.mkdir('Testcase')
+except FileExistsError:
+    pass
+
 p_clients = []
 for i in range(args.users):
     name = genName()
@@ -111,3 +116,4 @@ for name in names:
     p.start()
 for p in p_clients:
     p.join()
+
