@@ -27,7 +27,7 @@ import subprocess
 try:
     subprocess.run(['python3.7','wss_server.py','-u','5566','-p',f'{args.port}','-d','0'])
 except Exception as e:
-    print('run server error:{e})
+    print(f'run server error:{e}')
     sys.exit(0)
 import os
 from multiprocessing import Process
@@ -80,7 +80,7 @@ def runTest(name):
     # send msg
     time.sleep(1)
     for _ in range(a):
-        t = (int(random.random()*(10**power)) % f) + f[0]
+        t = (int(random.random()*(10**power)) % f[1]) + f[0]
         msg = name*t
         if len(msg) > settings.MAX_MSG_LEN:
             msg = msg[:settings.MAX_MSG_LEN]
