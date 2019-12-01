@@ -206,16 +206,23 @@ def startWSSClient(o):
 
 #####
 
-def startTestThread(cmd_q, test_case):
+def runTest(cmd_q, test_case):
+    time.sleep(5)
+    print(f'### tester ### startTestThread {test_case}')
     with open(test_case, 'r') as tc:
-        for cmd in rc.readline():
+        cmd = tc.readline()
+        while cmd:
+            print(f'### tester ### cmd {cmd}')
             cmd.strip('\n')
             if len(cmd) < 5:
+                cmd = tc.readline()
                 continue
             if cmd[:5] == 'sleep':
                 time.sleep(int(cmd[5:]))
+                print(f'### tester ### sleep {int(cmd[5:])}')
             else:
                 cmd_q.put(cmd)
+            cmd = tc.readline()
 
 class wssClientGUI:
     def __init__(self, port, name=None, test=False, test_case=None):
@@ -237,10 +244,15 @@ class wssClientGUI:
         
         # start test thread
         if test:
-            startTestThread(self.cmd_q, test_case)
+            self.startTestThread(test_case)
         
         # start gui running on main thread
         self.startGUI()
+    
+    def startTestThread(self, test_case):
+        test_thread = threading.Thread(target=runTest, name='test_thread', args=(self.cmd_q, test_case,))
+        test_thread.daemon = True  # as soon as the main program exits, all the daemon threads are killed
+        test_thread.start()
     
     def startGUI(self):
         wssClientGUIMain(self.cmd_q)   

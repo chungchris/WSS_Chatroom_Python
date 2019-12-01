@@ -59,7 +59,7 @@ nn = len(settings.ALLOWED_CHAR_FOR_NAME)
 ALLOWED_CHAR_FOR_NAME = list(settings.ALLOWED_CHAR_FOR_NAME)
 
 import random
-names = set()
+names = []
 def genName():
     while True:
         name = ''
@@ -70,7 +70,7 @@ def genName():
         t = int(random.random()*100) % nn
         name += ALLOWED_CHAR_FOR_NAME[t]
         if name not in names:
-            names.add(name)
+            names.append(name)
             break
     return name
 
@@ -117,11 +117,9 @@ def runTest(file_name):
     wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_UNREG))
     '''
 
-names = []
 p_clients = []
 for i in range(args.users):
     name = genName()
-    names.append(name)
     genTest('tc_' + name + '.txt')
 for name in names:
     p = Process(target=runTest, args=('tc_' + name + '.txt',))
