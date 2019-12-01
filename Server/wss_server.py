@@ -95,6 +95,7 @@ class UserBook:
         else:
             logger.debug('user book loaded')
         finally:
+            os.remove('./' + settings.USER_BOOK_FILE)
             self.updated = True
     
     async def store(self):
