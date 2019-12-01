@@ -16,6 +16,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Start WSS Chatroom test.')
 parser.add_argument('-p', '--port', dest='port', default=settings.DEFAULT_WSS_PORT, \
                     help=f'server at localhost port. default set at {settings.DEFAULT_WSS_PORT}')
+parser.add_argument('-u', '--users', dest='users', default=3, type=int, \
+                    help=f'simulate how many users')
 parser.add_argument('-f', '--frequency', dest='frequency', default=5, type=int, \
                     help=f'e.g. 5: simulate each user to send msg by frequency every t seconds. t will be a random value from 1 to 5.')
 parser.add_argument('-a', '--amount-of-msg', dest='amount', default=20, type=int, \
@@ -70,7 +72,8 @@ def genName():
 
 import time
 def runTest(name):
-    wsg = gui.wssClientGUI()
+    wsg = gui.wssClientGUI(args.port)
+    print(f'start a client with name{name}')
     # register
     time.sleep(3)
     wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_REG, name, '5566'))
@@ -91,7 +94,7 @@ def runTest(name):
     wsg.cmd_q.put((settings.JSON_VALUE_REQUEST_TYPE_UNREG))
 
 
-for i in range(cn):
+for i in range(args.users):
     p = Process(target=runTest, args=(genName(), ))
     p.start()
     p.join()
