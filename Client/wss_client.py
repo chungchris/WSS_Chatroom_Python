@@ -140,6 +140,7 @@ async def getMsgFromWS(websocket, res_q, user=None):
                                 msg_count = user.ui_room.size()
                             user.ui_room.insert(tk.END, f'{msg}')
                             msg_count += 1
+                            logger.debug(f'BROADCASTMSG- {msg}')
                         elif data[settings.JSON_KEY_TYPE] \
                                 == settings.JSON_VALYE_TYPE_TYPE_USER:
                             msg = '--- User \'' + data[settings.JSON_KEY_NAME] + '\' ' \

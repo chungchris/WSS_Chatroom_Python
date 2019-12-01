@@ -42,6 +42,23 @@ if args.mode == 'clean':
     os.system(f'rm -rf ./user_book*')
     sys.exit(0)
 elif args.mode == 'verify':
+    with open('./Testcase/last_test', 'r') as f:
+        users = int(f.readline())
+        amount = int(f.readline())
+        lf = f.readline()
+        exp = users * amount
+        print(f'expect {exp} messages.')
+        while lf: # each log file
+            lf.strip('\n')
+            with open(lf, 'r') as log_file:
+                count = 0
+                log_line = log_file.readline()
+                while log_line: # each log line
+                    if 'BROADCASTMSG' in log_line:
+                        count += 1
+                    log_line = log_file.readline()
+                print(f'get {count} messages in {lf}.')
+            lf = f.readline()
     sys.exit(0)
 elif args.mode != 'test':
     print('no such mode')
@@ -116,9 +133,15 @@ try:
     os.mkdir('Testcase')
 except FileExistsError:
     pass
-for i in range(args.users):
-    name = genName()
-    genTest(name)
+
+with open('./Testcase/last_test'+, 'w') as f:
+    for i in range(args.users):
+        name = genName()
+        genTest(name)
+    n = '\n'
+    f.write(f'{args.users}{n}')
+    f.write(f'{args.amount}{n}')
+    f.write(f'tc_{name}_client.log{n}')
 print('### tester ### test cases generated under ./Testcase/')
 
 # start wss client gui for each user in indep process

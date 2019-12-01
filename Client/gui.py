@@ -237,6 +237,13 @@ class wssClientGUI:
             logging.basicConfig(filename=log_file)
             logger.setLevel(logging.DEBUG)
         
+        # create q for gui event handler to pass action to wss_client
+        self.cmd_q = queue.Queue()
+        
+        # start test thread
+        if test:
+            self.startTestThread(test_case)
+        
         # start wss client agent
         if name:
             tname = 'wss_client_thread' + tname
@@ -246,13 +253,6 @@ class wssClientGUI:
         self.wss_client_thread = threading.Thread(target=startWSSClient, name=tname, args=(self,))
         self.wss_client_thread.daemon = True  # as soon as the main program exits, all the daemon threads are killed
         self.wss_client_thread.start()
-        
-        # create q for gui event handler to pass action to wss_client
-        self.cmd_q = queue.Queue()
-        
-        # start test thread
-        if test:
-            self.startTestThread(test_case)
         
         # start gui running on main thread
         self.startGUI()
